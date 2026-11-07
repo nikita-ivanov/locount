@@ -80,30 +80,6 @@ fn main() {
     println!("Total lines of code: {total_lines}");
 }
 
-fn count_lines2(path: &PathBuf) -> Counts {
-    let file = File::open(path).unwrap();
-    let map = unsafe { memmap2::Mmap::map(&file).unwrap() };
-
-    let mut total_code = 0;
-    let mut total_comments = 0;
-    let mut total_empty = 0;
-    for line in map.split(|c| *c == b'\n') {
-        if line.is_empty() {
-            total_empty += 1;
-        } else if line.len() > 1 && line[..2] == *"//".as_bytes() {
-            total_comments += 1;
-        } else {
-            total_code += 1;
-        }
-    }
-
-    Counts {
-        code: total_code,
-        comments: total_comments,
-        empty: total_empty,
-    }
-}
-
 fn count_lines3(path: &PathBuf) -> Counts {
     let contents = fs::read_to_string(path).unwrap();
 
