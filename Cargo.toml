@@ -1,0 +1,10 @@
+[package]
+name = "locount"
+version = "0.1.0"
+edition = "2024"
+
+[profile.release]
+debug = "line-tables-only"  # or true for full debug info
+
+[dependencies]
+memmap2 = "0.9.12"
