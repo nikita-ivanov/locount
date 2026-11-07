@@ -80,38 +80,6 @@ fn main() {
     println!("Total lines of code: {total_lines}");
 }
 
-fn count_lines(path: &PathBuf) -> Counts {
-    let file = File::open(path).unwrap();
-    let reader = BufReader::new(file);
-
-    let mut total_code = 0;
-    let mut total_comments = 0;
-    let mut total_empty = 0;
-    for line in reader.lines() {
-        match line {
-            Ok(text) => {
-                if text.starts_with("//") {
-                    total_comments += 1;
-                } else if text.is_empty() {
-                    total_empty += 1;
-                } else {
-                    total_code += 1;
-                }
-            }
-            Err(e) => {
-                // eprintln!("Error reading line, will skip. error was: {e:?}");
-                continue;
-            }
-        }
-    }
-
-    Counts {
-        code: total_code,
-        comments: total_comments,
-        empty: total_empty,
-    }
-}
-
 fn count_lines2(path: &PathBuf) -> Counts {
     let file = File::open(path).unwrap();
     let map = unsafe { memmap2::Mmap::map(&file).unwrap() };
