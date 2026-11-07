@@ -7,4 +7,3 @@ edition = "2024"
 debug = "line-tables-only"  # or true for full debug info
 
 [dependencies]
-memmap2 = "0.9.12"

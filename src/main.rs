@@ -1,10 +1,4 @@
-use std::{
-    fs::{self, File},
-    io::{BufRead, BufReader},
-    ops::Add,
-    path::PathBuf,
-    thread,
-};
+use std::{fs, ops::Add, path::PathBuf, thread};
 
 #[derive(Debug)]
 struct Counts {
@@ -61,7 +55,7 @@ fn main() {
         let handle = thread::spawn(move || {
             let mut counts = Counts::new();
             for path in chunk {
-                counts = counts + count_lines3(&path);
+                counts = counts + count_lines(&path);
             }
             counts
         });
@@ -80,7 +74,7 @@ fn main() {
     println!("Total lines of code: {total_lines}");
 }
 
-fn count_lines3(path: &PathBuf) -> Counts {
+fn count_lines(path: &PathBuf) -> Counts {
     let contents = fs::read_to_string(path).unwrap();
 
     let mut total = 0;
@@ -158,31 +152,6 @@ fn list_files(path: PathBuf) -> Vec<PathBuf> {
                 // eprintln!("Unknown file type for {item:?}: {file_type:?}, will skip");
                 continue;
             }
-
-            //             let metadata = match item.metadata() {
-            //                 Ok(m) => m,
-            //                 Err(e) => {
-            //                     // eprintln!("could not read metadata for {path:?}, will skip. error was: {e:?}");
-            //                     continue;
-            //                 }
-            //             };
-            //
-            //             if metadata.is_file() {
-            //                 match path.extension() {
-            //                     Some(ext) => {
-            //                         if ext == "rs" {
-            //                             files.push(path);
-            //                         }
-            //                     }
-            //                     None => {}
-            //                 }
-            //             } else {
-            //                 let path_string = path.clone().into_string().unwrap();
-            //                 if path_string.contains(".") || path_string.contains("target/") {
-            //                     continue;
-            //                 }
-            //                 directories.push(path);
-            //             }
         }
     }
 
