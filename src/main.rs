@@ -1,59 +1,30 @@
-use std::{fs, ops::Add, path::PathBuf, thread};
-
-#[derive(Debug)]
-struct Counts {
-    code: usize,
-    comments: usize,
-    empty: usize,
-}
-
-impl Counts {
-    fn new() -> Counts {
-        Counts {
-            code: 0,
-            comments: 0,
-            empty: 0,
-        }
-    }
-
-    fn total(&self) -> usize {
-        self.code + self.comments + self.empty
-    }
-}
-
-impl Add for Counts {
-    type Output = Counts;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Counts {
-            code: self.code + rhs.code,
-            comments: self.comments + rhs.comments,
-            empty: self.empty + rhs.empty,
-        }
-    }
-}
+use locount::count::{Counts, count_lines};
+use locount::discovery::list_files;
+use std::{path::PathBuf, thread};
 
 fn main() {
-    // let path = PathBuf::from("/Users/nivanov/code/rust/kraken_l3");
-    let path = PathBuf::from("/Users/nivanov/code/rust/zed");
-    // let path = PathBuf::from("/Users/nivanov/code/rust/zed-forks/goldstrikearch/zed");
-    // let path = PathBuf::from("/Users/nivanov/code/rust/gram");
+    let path_string = std::env::args().nth(1).unwrap();
+
+    let path = match path_string == ".".to_string() {
+        true => std::env::current_dir().unwrap(),
+        false => PathBuf::from(path_string),
+    };
 
     let paths = list_files(path);
-    let n = paths.len();
-    println!("Total of {n} files");
+    let num_files = paths.len();
+    println!("Files: {num_files}");
 
     let num_cores = std::thread::available_parallelism().unwrap().get();
-    println!("num cores: {num_cores}");
-    let chunk_size = n / num_cores;
+    println!("Cores: {num_cores}");
+    let chunk_size = (num_files / num_cores).max(num_cores);
     let chunks: Vec<Vec<PathBuf>> = paths.chunks(chunk_size).map(|c| c.to_vec()).collect();
     let num_chunks = chunks.len();
-    println!("Total {num_chunks} chunks");
+    println!("Chunks: {num_chunks}");
 
     let mut handles = Vec::new();
     for chunk in chunks {
         let handle = thread::spawn(move || {
-            let mut counts = Counts::new();
+            let mut counts = Counts::empty();
             for path in chunk {
                 counts = counts + count_lines(&path);
             }
@@ -62,98 +33,14 @@ fn main() {
         handles.push(handle);
     }
 
-    let mut counts = Counts::new();
+    let mut counts = Counts::empty();
     for h in handles {
         let c = h.join().unwrap();
         counts = counts + c;
     }
 
-    println!("totals: {counts:?}");
+    println!("Counts: {counts:?}");
 
     let total_lines = counts.total();
     println!("Total lines of code: {total_lines}");
-}
-
-fn count_lines(path: &PathBuf) -> Counts {
-    let contents = fs::read_to_string(path).unwrap();
-
-    let mut total = 0;
-    let mut total_comments = 0;
-    let mut total_empty = 0;
-
-    for line in contents.split("\n") {
-        if line.starts_with("//") {
-            total_comments += 1;
-        } else if line.is_empty() {
-            total_empty += 1;
-        } else {
-            total += 1;
-        }
-    }
-
-    Counts {
-        code: total,
-        comments: total_comments,
-        empty: total_empty,
-    }
-}
-fn list_files(path: PathBuf) -> Vec<PathBuf> {
-    let mut directories = Vec::from([path.clone()]);
-
-    if path.is_file() {
-        return directories;
-    }
-
-    let mut files = Vec::new();
-
-    while !&directories.is_empty() {
-        let current_dir = directories.pop().unwrap();
-
-        let current_dir = match fs::read_dir(&current_dir) {
-            Ok(d) => d,
-            Err(e) => {
-                // eprintln!("error readong dir {current_dir:?}, will skip. error was: {e:?}");
-                continue;
-            }
-        };
-
-        for item in current_dir {
-            let item = match item {
-                Ok(x) => x,
-                Err(e) => {
-                    // eprintln!("error will skip. error was: {e:?}");
-                    continue;
-                }
-            };
-
-            let path = item.path();
-
-            let Ok(file_type) = item.file_type() else {
-                // eprintln!("Failed to get file type for {item:?}, will skip");
-                continue;
-            };
-
-            if file_type.is_file() {
-                match path.extension() {
-                    Some(ext) => {
-                        if ext == "rs" {
-                            files.push(path);
-                        }
-                    }
-                    None => {}
-                }
-            } else if file_type.is_dir() {
-                let path_string = path.clone().into_string().unwrap();
-                if path_string.contains(".") || path_string.contains("target/") {
-                    continue;
-                }
-                directories.push(path);
-            } else {
-                // eprintln!("Unknown file type for {item:?}: {file_type:?}, will skip");
-                continue;
-            }
-        }
-    }
-
-    files
 }
