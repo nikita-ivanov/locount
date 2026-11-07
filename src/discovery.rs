@@ -1,6 +1,6 @@
 use std::{fs, path::PathBuf};
 
-pub fn list_files(path: PathBuf) -> Vec<PathBuf> {
+pub fn list_files(path: PathBuf, extension: &str) -> Vec<PathBuf> {
     let mut directories = Vec::from([path.clone()]);
 
     if path.is_file() {
@@ -39,7 +39,7 @@ pub fn list_files(path: PathBuf) -> Vec<PathBuf> {
             if file_type.is_file() {
                 match path.extension() {
                     Some(ext) => {
-                        if ext == "rs" {
+                        if ext == extension {
                             files.push(path);
                         }
                     }

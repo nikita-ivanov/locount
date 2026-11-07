@@ -3,14 +3,15 @@ use locount::discovery::list_files;
 use std::{path::PathBuf, thread};
 
 fn main() {
-    let path_string = std::env::args().nth(1).unwrap();
+    let path_string = std::env::args().nth(1).unwrap_or_else(|| ".".to_string());
+    let extension_string = std::env::args().nth(2).unwrap_or_else(|| "rs".to_string());
 
     let path = match path_string == ".".to_string() {
         true => std::env::current_dir().unwrap(),
         false => PathBuf::from(path_string),
     };
 
-    let paths = list_files(path);
+    let paths = list_files(path, &extension_string);
     let num_files = paths.len();
     println!("Files: {num_files}");
 
