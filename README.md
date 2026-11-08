@@ -20,7 +20,9 @@ Running `locount` vs `tokei` against Zed codebase:
 Counts: Counts { code: 1442359, comments: 16510, empty: 154514 }
 Total lines of code: 1613383
 0.07s user 0.11s system 300% cpu 0.063 total
+```
 
+```
 # time tokei -t=Rust path/to/zed
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Language              Files        Lines         Code     Comments       Blanks
@@ -33,3 +35,9 @@ Total lines of code: 1613383
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 0.39s user 0.17s system 465% cpu 0.120 total
 ```
+
+TODOs
+- proper comment (and docstring) counting using state machine (e.g. incl. `/*...*/ comment blocks)
+- proper arg parsing funcionality with help pages (without using `clap` or similar)
+- better automatic directoy exclusion (e.g. `target` for Rust or `.venv` for Python)
+- exclusion of all hidden (`.`) directories

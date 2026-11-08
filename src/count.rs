@@ -37,22 +37,29 @@ impl Add for Counts {
     }
 }
 
-pub fn count_lines(path: &PathBuf) -> Counts {
+pub fn count_lines(path: &PathBuf, comment_strings: &[&str]) -> Counts {
     let contents = fs::read_to_string(path).unwrap();
 
-    let mut total = 0;
+    let mut total_code = 0;
     let mut total_comments = 0;
     let mut total_empty = 0;
 
-    for line in contents.split("\n") {
-        if line.starts_with("//") {
-            total_comments += 1;
-        } else if line.is_empty() {
+    for line in str::lines(&contents) {
+        if line.is_empty() {
             total_empty += 1;
-        } else {
-            total += 1;
+            continue;
         }
+
+        if comment_strings
+            .iter()
+            .any(|comment| line.starts_with(comment))
+        {
+            total_comments += 1;
+            continue;
+        }
+
+        total_code += 1;
     }
 
-    Counts::new(total, total_comments, total_empty)
+    Counts::new(total_code, total_comments, total_empty)
 }

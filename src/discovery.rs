@@ -1,7 +1,10 @@
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
-pub fn list_files(path: PathBuf, extension: &str) -> Vec<PathBuf> {
-    let mut directories = Vec::from([path.clone()]);
+pub fn list_files(path: &Path, extension: &str) -> Vec<PathBuf> {
+    let mut directories = Vec::from([path.to_path_buf()]);
 
     if path.is_file() {
         return directories;
