@@ -1,4 +1,4 @@
-use std::{fs, ops::Add, path::PathBuf};
+use std::{fs, ops::Add, path::Path};
 
 #[derive(Debug)]
 pub struct Counts {
@@ -37,7 +37,7 @@ impl Add for Counts {
     }
 }
 
-pub fn count_lines(path: &PathBuf, comment_strings: &[&str]) -> Counts {
+pub fn count_lines(path: &Path, comment_strings: &[&str]) -> Counts {
     let contents = fs::read_to_string(path).unwrap();
 
     let mut total_code = 0;
@@ -45,14 +45,16 @@ pub fn count_lines(path: &PathBuf, comment_strings: &[&str]) -> Counts {
     let mut total_empty = 0;
 
     for line in str::lines(&contents) {
-        if line.is_empty() {
+        let line_trimmed = line.trim();
+
+        if line_trimmed.is_empty() {
             total_empty += 1;
             continue;
         }
 
         if comment_strings
             .iter()
-            .any(|comment| line.starts_with(comment))
+            .any(|comment| line_trimmed.starts_with(comment))
         {
             total_comments += 1;
             continue;

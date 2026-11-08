@@ -41,3 +41,4 @@ TODOs
 - proper arg parsing funcionality with help pages (without using `clap` or similar)
 - better automatic directoy exclusion (e.g. `target` for Rust or `.venv` for Python)
 - exclusion of all hidden (`.`) directories
+- tests
