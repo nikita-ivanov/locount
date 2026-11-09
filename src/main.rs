@@ -1,6 +1,7 @@
 use locount::args::parse_args;
-use locount::count::{Counts, count_lines};
+use locount::count::{Counts, Language, count_lines};
 use locount::discovery::list_files;
+use std::fs;
 use std::{path::PathBuf, thread};
 
 fn main() {
@@ -17,15 +18,15 @@ fn main() {
     let num_chunks = chunks.len();
     println!("Chunks: {num_chunks}");
 
-    let comment_marks = comment_strings(&args.extension);
-    let block_comments = block_comments(&args.extension);
+    let lang = language(&args.extension);
 
     let mut threads = Vec::new();
     for chunk in chunks {
         let handle = thread::spawn(move || {
             let mut counts = Counts::empty();
             for path in chunk {
-                counts = counts + count_lines(&path, comment_marks, block_comments);
+                let contents = fs::read_to_string(&path).unwrap();
+                counts = counts + count_lines(&contents, &lang);
             }
             counts
         });
@@ -44,22 +45,12 @@ fn main() {
     println!("Total lines of code: {total_lines}");
 }
 
-fn comment_strings(extension: &str) -> &'static [&'static str] {
+fn language(extension: &str) -> Language {
     match extension {
-        "rs" => &["//"],
-        "csharp" => &["//"],
-        "js" => &["//"],
-        "py" => &["#"],
-        _ => &[],
-    }
-}
-
-fn block_comments(extension: &str) -> Option<(&'static str, &'static str)> {
-    match extension {
-        "rs" => None,
-        "csharp" => Some(("/*", "*/")),
-        "js" => Some(("/*", "*/")),
-        "py" => None,
-        _ => None,
+        "rs" => Language::new(&["//"], None),
+        "py" => Language::new(&["#"], None),
+        "js" => Language::new(&["//"], Some(("/*", "*/"))),
+        "csharp" => Language::new(&["//"], Some(("/*", "*/"))),
+        _ => Language::new(&[], None),
     }
 }

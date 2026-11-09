@@ -42,3 +42,4 @@ TODOs
 - better automatic directoy exclusion (e.g. `target` for Rust or `.venv` for Python)
 - exclusion of all hidden (`.`) directories
 - tests
+- install shell scripts
