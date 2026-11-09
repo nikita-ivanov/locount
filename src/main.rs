@@ -18,13 +18,14 @@ fn main() {
     println!("Chunks: {num_chunks}");
 
     let comment_marks = comment_strings(&args.extension);
+    let block_comments = block_comments(&args.extension);
 
     let mut threads = Vec::new();
     for chunk in chunks {
         let handle = thread::spawn(move || {
             let mut counts = Counts::empty();
             for path in chunk {
-                counts = counts + count_lines(&path, comment_marks);
+                counts = counts + count_lines(&path, comment_marks, block_comments);
             }
             counts
         });
@@ -46,9 +47,19 @@ fn main() {
 fn comment_strings(extension: &str) -> &'static [&'static str] {
     match extension {
         "rs" => &["//"],
-        "csharp" => &["//", "/*", "*/"],
-        "js" => &["//", "/*", "*/"],
+        "csharp" => &["//"],
+        "js" => &["//"],
         "py" => &["#"],
         _ => &[],
+    }
+}
+
+fn block_comments(extension: &str) -> Option<(&'static str, &'static str)> {
+    match extension {
+        "rs" => None,
+        "csharp" => Some(("/*", "*/")),
+        "js" => Some(("/*", "*/")),
+        "py" => None,
+        _ => None,
     }
 }
