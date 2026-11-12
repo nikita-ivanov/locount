@@ -1,11 +1,16 @@
-use locount::args::parse_args;
-use locount::count::{Counts, Language, count_lines};
+use locount::args::{CountMode, parse_args};
+use locount::count::{Counts, Language, count_lines_exact, count_lines_fast};
 use locount::discovery::list_files;
 use std::fs;
 use std::{path::PathBuf, thread};
 
 fn main() {
     let args = parse_args();
+
+    let count_lines: fn(&str, &Language) -> Counts = match args.count_mode {
+        CountMode::FAST => count_lines_fast,
+        CountMode::EXACT => count_lines_exact,
+    };
 
     let paths = list_files(&args.path, &args.extension);
     let num_files = paths.len();

@@ -67,7 +67,73 @@ fn is_comment(line: &str, comment_strings: &[&str]) -> bool {
         .any(|comment| line.starts_with(comment))
 }
 
-fn scan_line(
+fn scan_line_exact(
+    state: &State,
+    line: &str,
+    comment_strings: &[&str],
+    block_comment: Option<(&str, &str)>,
+) -> (State, Counts) {
+    let line = line.trim();
+
+    if line.is_empty() {
+        return (State::Code, Counts::new(0, 0, 1));
+    }
+
+    let mut saw_code = false;
+    let mut state = state.clone();
+
+    let mut i = 0;
+    'outer: while i < line.len() {
+        let rest = &line[i..];
+
+        match state {
+            State::Code => {
+                for comment in comment_strings {
+                    if rest.starts_with(comment) {
+                        break 'outer;
+                    }
+                }
+
+                let char_length = rest
+                    .chars()
+                    .next()
+                    .expect("rest non empty since i < line.len()")
+                    .len_utf8();
+
+                if let Some(block) = block_comment {
+                    if rest.starts_with(block.0) {
+                        state = State::CommentBlock;
+                        i = i + block.0.len();
+                    } else {
+                        saw_code = true;
+                        i += char_length;
+                    }
+                } else {
+                    saw_code = true;
+                    i += char_length;
+                }
+            }
+            State::CommentBlock => {
+                let block = block_comment.expect("We are in block code");
+
+                if rest.starts_with(block.1) {
+                    state = State::Code;
+                    i += block.1.len();
+                } else {
+                    i += rest.chars().next().unwrap().len_utf8();
+                }
+            }
+        }
+    }
+
+    if saw_code {
+        (state, Counts::new(1, 0, 0))
+    } else {
+        (state, Counts::new(0, 1, 0))
+    }
+}
+
+fn scan_line_fast(
     state: &State,
     line: &str,
     comment_strings: &[&str],
@@ -123,12 +189,25 @@ fn scan_line(
     }
 }
 
-pub fn count_lines(contents: &str, lang: &Language) -> Counts {
+pub fn count_lines_fast(contents: &str, lang: &Language) -> Counts {
     let mut state = State::Code;
     let mut counts = Counts::empty();
 
     for line in str::lines(&contents) {
-        let (s, c) = scan_line(&state, line, lang.comments, lang.block_comments);
+        let (s, c) = scan_line_fast(&state, line, lang.comments, lang.block_comments);
+        state = s;
+        counts = counts + c;
+    }
+
+    counts
+}
+
+pub fn count_lines_exact(contents: &str, lang: &Language) -> Counts {
+    let mut state = State::Code;
+    let mut counts = Counts::empty();
+
+    for line in str::lines(&contents) {
+        let (s, c) = scan_line_exact(&state, line, lang.comments, lang.block_comments);
         state = s;
         counts = counts + c;
     }
