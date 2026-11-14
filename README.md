@@ -1,7 +1,7 @@
 locount
 ---
 
-Fast zero dependency lones of code counter in Rust.
+Fast zero dependency lines of code counter in Rust.
 
 ## Example usage
 First build
