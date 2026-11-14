@@ -291,4 +291,51 @@ mod tests {
         assert_eq!(counts_exact.empty, 6);
         assert_eq!(counts_exact.total(), 25);
     }
+
+    #[test]
+    fn test_count_lines_exact_vs_fast() {
+        let code = "
+            // function that does something
+            function add(a, b) {
+                return a + b;
+            }
+
+            /* this is
+            standard block comment
+            */
+            let sum = add;
+
+            /* this block comment ends same line */
+            function average(a, b, fn) {
+                return fn(a, b) / 2;
+            }
+
+            function average(a, b, fn) {
+                return fn(a, b) / 2;
+            }
+
+            let result = average(10, 20, sum); /* chicky
+            block
+            comment */
+
+            /*there is code next to this block comment*/ console.log(result);";
+
+        let lang = Language::new(&["//"], Some(("/*", "*/")));
+
+        let counts_exact = count_lines_exact(code, &lang);
+        let counts_fast = count_lines_fast(code, &lang);
+
+        assert_eq!(counts_exact.code, 12);
+        // note the block comment that starts with "/* chicky" does not count towards comments
+        // because we treat this line as code
+        assert_eq!(counts_exact.comments, 7);
+        assert_eq!(counts_exact.empty, 6);
+        assert_eq!(counts_exact.total(), 25);
+
+        // counts_fast will not treat the last like as code, hence it has 1 less code and 1 more comment
+        assert_eq!(counts_fast.code, 11);
+        assert_eq!(counts_fast.comments, 8);
+        assert_eq!(counts_fast.empty, 6);
+        assert_eq!(counts_fast.total(), 25);
+    }
 }
