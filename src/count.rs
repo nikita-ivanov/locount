@@ -41,6 +41,14 @@ impl Counts {
     pub fn total(&self) -> usize {
         self.code + self.comments + self.empty
     }
+
+    pub fn add(&self, other: &Counts) -> Counts {
+        Counts {
+            code: self.code + other.code,
+            comments: self.comments + other.comments,
+            empty: self.empty + other.empty,
+        }
+    }
 }
 
 impl Add for Counts {

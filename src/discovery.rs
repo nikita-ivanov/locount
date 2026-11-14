@@ -3,21 +3,21 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub fn list_files(path: &Path, extension: &str) -> Vec<PathBuf> {
+pub fn list_files(path: &Path, _extension: &str) -> Vec<(PathBuf, String)> {
     let mut directories = Vec::from([path.to_path_buf()]);
 
-    if path.is_file() {
-        return directories;
-    }
+    //     if path.is_file() {
+    //         return directories;
+    //     }
 
-    let mut files = Vec::new();
+    let mut files: Vec<(PathBuf, String)> = Vec::new();
 
     while !&directories.is_empty() {
         let current_dir = directories.pop().unwrap();
 
         let current_dir = match fs::read_dir(&current_dir) {
             Ok(d) => d,
-            Err(e) => {
+            Err(_) => {
                 // eprintln!("error readong dir {current_dir:?}, will skip. error was: {e:?}");
                 continue;
             }
@@ -26,7 +26,7 @@ pub fn list_files(path: &Path, extension: &str) -> Vec<PathBuf> {
         for item in current_dir {
             let item = match item {
                 Ok(x) => x,
-                Err(e) => {
+                Err(_) => {
                     // eprintln!("error will skip. error was: {e:?}");
                     continue;
                 }
@@ -42,9 +42,11 @@ pub fn list_files(path: &Path, extension: &str) -> Vec<PathBuf> {
             if file_type.is_file() {
                 match path.extension() {
                     Some(ext) => {
-                        if ext == extension {
-                            files.push(path);
-                        }
+                        // if ext == extension {
+                        // TODO: we currently dump too many redundant files, should we keep a registry of known file extensions?
+                        // TODO: is it ok/efficient to use lossy and then to_string?
+                        files.push((path.clone(), ext.to_string_lossy().to_string()))
+                        // }
                     }
                     None => {}
                 }
