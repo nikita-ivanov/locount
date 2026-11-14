@@ -10,20 +10,26 @@ cargo build -r
 ```
 then run
 ```bash
-target/release/locount [path/to/file] [extension]
+target/release/locount [path/to/file] [extension] [mode]
 ```
+
+`mode` is either `fast` (default) or `exact`. Fast mode may avoids per-character scans but may treat
+very rare edge cases as comments instead of code, e.g. `/*block comment*/ return 42;` line is treated as
+comment under `fast` mode vs. as code under `exact` mode. Exact mode is roughly 30% slower than fast mode.
 
 ## Benchmarking
 Running `locount` vs `tokei` against Zed codebase:
 ```text
-# time target/release/locount path/to/zed rs
-Counts: Counts { code: 1442359, comments: 16510, empty: 154514 }
-Total lines of code: 1613383
-0.07s user 0.11s system 300% cpu 0.063 total
+time target/release/locount /Users/nivanov/code/rust/zed rs fast
+Files: 1935
+Chunks: 9
+Counts: Counts { code: 1386997, comments: 71872, empty: 152579 }
+Total lines of code: 1611448
+0.11s user 0.10s system 318% cpu 0.066 total
 ```
 
 ```
-# time tokei -t=Rust path/to/zed
+time tokei -t=Rust path/to/zed
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Language              Files        Lines         Code     Comments       Blanks
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -37,9 +43,10 @@ Total lines of code: 1613383
 ```
 
 TODOs
-- proper comment (and docstring) counting using state machine (e.g. incl. `/*...*/ comment blocks)
+- docstring counting
 - proper arg parsing funcionality with help pages (without using `clap` or similar)
 - better automatic directoy exclusion (e.g. `target` for Rust or `.venv` for Python)
 - exclusion of all hidden (`.`) directories
 - tests
 - install shell scripts
+- counting of all extensions, not only 1 extension per run
