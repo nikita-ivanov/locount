@@ -318,24 +318,26 @@ mod tests {
             block
             comment */
 
-            /*there is code next to this block comment*/ console.log(result);";
+            /*there is code next to this block comment*/ console.log(result);
+
+            console.log('done');";
 
         let lang = Language::new(&["//"], Some(("/*", "*/")));
 
         let counts_exact = count_lines_exact(code, &lang);
         let counts_fast = count_lines_fast(code, &lang);
 
-        assert_eq!(counts_exact.code, 12);
+        assert_eq!(counts_exact.code, 13);
         // note the block comment that starts with "/* chicky" does not count towards comments
         // because we treat this line as code
         assert_eq!(counts_exact.comments, 7);
-        assert_eq!(counts_exact.empty, 6);
-        assert_eq!(counts_exact.total(), 25);
+        assert_eq!(counts_exact.empty, 7);
+        assert_eq!(counts_exact.total(), 27);
 
         // counts_fast will not treat the last like as code, hence it has 1 less code and 1 more comment
-        assert_eq!(counts_fast.code, 11);
+        assert_eq!(counts_fast.code, 12);
         assert_eq!(counts_fast.comments, 8);
-        assert_eq!(counts_fast.empty, 6);
-        assert_eq!(counts_fast.total(), 25);
+        assert_eq!(counts_fast.empty, 7);
+        assert_eq!(counts_fast.total(), 27);
     }
 }
