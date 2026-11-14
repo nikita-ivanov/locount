@@ -217,7 +217,7 @@ pub fn count_lines_exact(contents: &str, lang: &Language) -> Counts {
 
 #[cfg(test)]
 mod tests {
-    use crate::count::{Language, count_lines};
+    use crate::count::{Language, count_lines_exact, count_lines_fast};
 
     #[test]
     fn test_count_lines_rust() {
@@ -232,12 +232,18 @@ mod tests {
 
         let lang = Language::new(&["//"], None);
 
-        let counts = count_lines(code, &lang);
+        let counts_fast = count_lines_fast(code, &lang);
+        let counts_exact = count_lines_exact(code, &lang);
 
-        assert_eq!(counts.code, 5);
-        assert_eq!(counts.comments, 2);
-        assert_eq!(counts.empty, 1);
-        assert_eq!(counts.total(), 8);
+        assert_eq!(counts_exact.code, counts_fast.code);
+        assert_eq!(counts_exact.comments, counts_fast.comments);
+        assert_eq!(counts_exact.empty, counts_fast.empty);
+        assert_eq!(counts_exact.total(), counts_fast.total());
+
+        assert_eq!(counts_exact.code, 5);
+        assert_eq!(counts_exact.comments, 2);
+        assert_eq!(counts_exact.empty, 1);
+        assert_eq!(counts_exact.total(), 8);
     }
 
     #[test]
@@ -270,14 +276,19 @@ mod tests {
 
         let lang = Language::new(&["//"], Some(("/*", "*/")));
 
-        let counts = count_lines(code, &lang);
+        let counts_exact = count_lines_exact(code, &lang);
+        let counts_fast = count_lines_fast(code, &lang);
 
-        assert_eq!(counts.code, 12);
+        assert_eq!(counts_exact.code, counts_fast.code);
+        assert_eq!(counts_exact.comments, counts_fast.comments);
+        assert_eq!(counts_exact.empty, counts_fast.empty);
+        assert_eq!(counts_exact.total(), counts_fast.total());
 
+        assert_eq!(counts_exact.code, 12);
         // note the block comment that starts with "/* chicky" does not count towards comments
         // because we treat this line as code
-        assert_eq!(counts.comments, 7);
-        assert_eq!(counts.empty, 6);
-        assert_eq!(counts.total(), 25);
+        assert_eq!(counts_exact.comments, 7);
+        assert_eq!(counts_exact.empty, 6);
+        assert_eq!(counts_exact.total(), 25);
     }
 }
