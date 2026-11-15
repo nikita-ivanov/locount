@@ -7,12 +7,12 @@ pub enum CountMode {
 
 pub struct Args {
     pub path: PathBuf,
-    pub extension: String,
+    pub extension: Option<String>,
     pub count_mode: CountMode,
 }
 
 impl Args {
-    pub fn new(path: &Path, extension: String, count_mode: CountMode) -> Args {
+    pub fn new(path: &Path, extension: Option<String>, count_mode: CountMode) -> Args {
         Args {
             path: path.to_path_buf(),
             extension,
@@ -23,7 +23,7 @@ impl Args {
 
 pub fn parse_args() -> Args {
     let path_string = std::env::args().nth(1).unwrap_or_else(|| ".".to_string());
-    let extension_string = std::env::args().nth(2).unwrap_or_else(|| "rs".to_string());
+    let extension_string = std::env::args().nth(2);
     let count_mode = std::env::args()
         .nth(3)
         .unwrap_or_else(|| "fast".to_string());

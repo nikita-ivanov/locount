@@ -4,7 +4,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-const IGNORE_DIRS: &'static [&'static str] = &["target"];
+use crate::language::languages;
+
+const IGNORE_DIRS: &'static [&'static str] = &["target", "node_modules"];
 
 fn path_to_str<'a>(path: &'a Path) -> Option<&'a str> {
     let Some(file_name) = path.file_name() else {
@@ -18,12 +20,18 @@ fn path_to_str<'a>(path: &'a Path) -> Option<&'a str> {
     Some(path_str)
 }
 
-pub fn list_files(path: &Path, _extension: &str) -> Vec<(PathBuf, OsString)> {
-    let mut directories = Vec::from([path.to_path_buf()]);
+pub fn list_files(path: &Path, extension: Option<&str>) -> Vec<(PathBuf, OsString)> {
+    if path.is_file() {
+        let Some(ext) = path.extension() else {
+            return Vec::new();
+        };
 
-    //     if path.is_file() {
-    //         return directories;
-    //     }
+        return vec![(path.to_path_buf(), ext.to_owned())];
+    }
+
+    let langs = languages();
+
+    let mut directories = Vec::from([path.to_path_buf()]);
 
     let mut files: Vec<(PathBuf, OsString)> = Vec::new();
 
@@ -63,15 +71,21 @@ pub fn list_files(path: &Path, _extension: &str) -> Vec<(PathBuf, OsString)> {
                     continue;
                 }
 
-                match path.extension() {
-                    Some(ext) => {
-                        // if ext == extension {
-                        // TODO: we currently dump too many redundant files, should we keep a registry of known file extensions?
-                        // TODO: is it ok/efficient to use lossy and then to_string?
-                        files.push((path.clone(), ext.to_owned()))
-                        // }
+                let Some(ext) = path.extension() else {
+                    continue;
+                };
+
+                match extension {
+                    Some(e) => {
+                        if e == ext {
+                            files.push((path.clone(), ext.to_owned()));
+                        }
                     }
-                    None => {}
+                    None => {
+                        if langs.iter().any(|l| l.0 == &ext) {
+                            files.push((path.clone(), ext.to_owned()))
+                        }
+                    }
                 }
             } else if file_type.is_dir() {
                 let Some(path_str) = path_to_str(&path) else {

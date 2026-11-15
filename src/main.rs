@@ -1,6 +1,8 @@
+use locount::Language;
 use locount::args::{CountMode, parse_args};
-use locount::count::{Counts, Language, count_lines_exact, count_lines_fast};
+use locount::count::{Counts, count_lines_exact, count_lines_fast};
 use locount::discovery::list_files;
+use locount::language::languages;
 use std::collections::HashMap;
 use std::ffi::OsString;
 use std::fs;
@@ -14,7 +16,7 @@ fn main() {
         CountMode::EXACT => count_lines_exact,
     };
 
-    let paths = list_files(&args.path, &args.extension);
+    let paths = list_files(&args.path, args.extension.as_deref());
     let num_files = paths.len();
     println!("Files: {num_files}");
 
@@ -26,12 +28,12 @@ fn main() {
 
     println!("Chunks: {}", chunks.len());
 
-    let lang = language(&args.extension);
-
     let mut threads = Vec::new();
     for chunk in chunks {
         let handle = thread::spawn(move || {
+            let langs = languages();
             let mut counts: Vec<(Counts, OsString)> = Vec::new();
+
             for (path, extension) in chunk {
                 let contents = match fs::read_to_string(&path) {
                     Ok(res) => res,
@@ -40,11 +42,22 @@ fn main() {
                         continue;
                     }
                 };
+
+                // TODO: is it ok perfomance wise and idiomatic?
+                let Some(extension_str) = extension.to_str() else {
+                    continue;
+                };
+
+                let Some(lang) = langs.get(&extension_str) else {
+                    continue;
+                };
+
                 let c = count_lines(&contents, &lang);
                 counts.push((c, extension));
             }
             counts
         });
+
         threads.push(handle);
     }
 
@@ -53,10 +66,10 @@ fn main() {
     for thread in threads {
         let result = thread.join().unwrap();
         for (count, extension) in result {
-            // TODO: not sure this is idiomatic approach to modify hashmap value
-            let empty = Counts::empty();
-            let current_count = counts_by_extension.get(&extension).unwrap_or(&empty);
-            counts_by_extension.insert(extension, current_count.add(&count));
+            counts_by_extension
+                .entry(extension)
+                .and_modify(|c| *c = c.add(&count))
+                .or_insert(count);
         }
     }
 
@@ -65,15 +78,5 @@ fn main() {
 
     for (extension, count) in counts_vec {
         println!("Counts {extension:?}: {count:?}");
-    }
-}
-
-fn language(extension: &str) -> Language {
-    match extension {
-        "rs" => Language::new(&["//"], None),
-        "py" => Language::new(&["#"], None),
-        "js" => Language::new(&["//"], Some(("/*", "*/"))),
-        "csharp" => Language::new(&["//"], Some(("/*", "*/"))),
-        _ => Language::new(&[], None),
     }
 }

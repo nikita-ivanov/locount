@@ -45,8 +45,7 @@ time tokei -t=Rust path/to/zed
 TODOs
 - docstring counting
 - proper arg parsing funcionality with help pages (without using `clap` or similar)
-- better automatic directoy exclusion (e.g. `target` for Rust or `.venv` for Python)
-- exclusion of all hidden (`.`) directories
-- tests
+- better automatic directoy exclusion (e.g. `target` for Rust or `node_modules` for js)
 - install shell scripts
-- counting of all extensions, not only 1 extension per run
+- known list of extensions to include
+- CLI supplied excluded directories

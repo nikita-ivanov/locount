@@ -1,22 +1,6 @@
 use std::ops::Add;
 
-#[derive(Clone, Copy)]
-pub struct Language {
-    comments: &'static [&'static str],
-    block_comments: Option<(&'static str, &'static str)>,
-}
-
-impl Language {
-    pub fn new(
-        comments: &'static [&'static str],
-        block_comments: Option<(&'static str, &'static str)>,
-    ) -> Language {
-        Language {
-            comments,
-            block_comments,
-        }
-    }
-}
+use crate::Language;
 
 #[derive(Debug)]
 pub struct Counts {
