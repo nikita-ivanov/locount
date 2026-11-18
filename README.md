@@ -10,12 +10,14 @@ cargo build -r
 ```
 then run
 ```bash
-target/release/locount [path/to/file] [extension] [mode]
+target/release/locount [path/to/file] [extension] [mode] [exclude]
 ```
 
 `mode` is either `fast` (default) or `exact`. Fast mode may avoids per-character scans but may treat
 very rare edge cases as comments instead of code, e.g. `/*block comment*/ return 42;` line is treated as
 comment under `fast` mode vs. as code under `exact` mode. Exact mode is roughly 30% slower than fast mode.
+
+`[exclude]` is an optional list of comma separated directories for exclusion (no whitespaces).
 
 ## Benchmarking
 Running `locount` vs `tokei` against Zed codebase:

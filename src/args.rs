@@ -39,8 +39,13 @@ pub fn parse_args() -> Args {
 
     let exclude_dirs: Vec<String> = match std::env::args().nth(4) {
         Some(dirs) => {
-            let mut dirs: Vec<String> = dirs.split(",").map(|s| s.to_string()).collect();
-            dirs.extend(default_exclude);
+            let mut dirs: Vec<String> = dirs.split(",").map(|s| s.trim().to_string()).collect();
+            for dir in default_exclude {
+                if !dirs.contains(&dir) {
+                    dirs.push(dir);
+                }
+            }
+            // dirs.extend(default_exclude);
             dirs
         }
         None => default_exclude,
