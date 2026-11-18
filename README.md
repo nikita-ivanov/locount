@@ -49,3 +49,4 @@ TODOs
 - install shell scripts
 - known list of extensions to include
 - CLI supplied excluded directories
+- add file counts

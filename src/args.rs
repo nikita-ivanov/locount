@@ -7,16 +7,23 @@ pub enum CountMode {
 
 pub struct Args {
     pub path: PathBuf,
-    pub extension: Option<String>,
     pub count_mode: CountMode,
+    pub extension: Option<String>,
+    pub exclude_dirs: Vec<String>,
 }
 
 impl Args {
-    pub fn new(path: &Path, extension: Option<String>, count_mode: CountMode) -> Args {
+    pub fn new(
+        path: &Path,
+        count_mode: CountMode,
+        extension: Option<String>,
+        exclude_dirs: Vec<String>,
+    ) -> Args {
         Args {
             path: path.to_path_buf(),
             extension,
             count_mode,
+            exclude_dirs,
         }
     }
 }
@@ -27,6 +34,17 @@ pub fn parse_args() -> Args {
     let count_mode = std::env::args()
         .nth(3)
         .unwrap_or_else(|| "fast".to_string());
+
+    let default_exclude = vec!["target".to_string(), "node_modules".to_string()];
+
+    let exclude_dirs: Vec<String> = match std::env::args().nth(4) {
+        Some(dirs) => {
+            let mut dirs: Vec<String> = dirs.split(",").map(|s| s.to_string()).collect();
+            dirs.extend(default_exclude);
+            dirs
+        }
+        None => default_exclude,
+    };
 
     let count_mode = match &count_mode[..] {
         "fast" => CountMode::FAST,
@@ -39,5 +57,5 @@ pub fn parse_args() -> Args {
         false => PathBuf::from(path_string),
     };
 
-    Args::new(&path, extension_string, count_mode)
+    Args::new(&path, count_mode, extension_string, exclude_dirs)
 }

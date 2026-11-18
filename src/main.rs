@@ -16,7 +16,7 @@ fn main() {
         CountMode::EXACT => count_lines_exact,
     };
 
-    let paths = list_files(&args.path, args.extension.as_deref());
+    let paths = list_files(&args.path, args.extension.as_deref(), &args.exclude_dirs);
     let num_files = paths.len();
     println!("Files: {num_files}");
 
@@ -26,7 +26,7 @@ fn main() {
     let chunks: Vec<Vec<(PathBuf, OsString)>> =
         paths.chunks(chunk_size).map(|c| c.to_vec()).collect();
 
-    println!("Chunks: {}", chunks.len());
+    // println!("Chunks: {}", chunks.len());
 
     let mut threads = Vec::new();
     for chunk in chunks {
