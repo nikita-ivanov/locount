@@ -20,13 +20,14 @@ fn main() {
     let num_files = paths.len();
     println!("Files: {num_files}");
 
-    let num_cores = std::thread::available_parallelism().unwrap().get();
+    let num_cores = match std::thread::available_parallelism() {
+        Ok(res) => res.get(),
+        Err(_) => 1,
+    };
 
     let chunk_size = (num_files / num_cores).max(num_cores);
     let chunks: Vec<Vec<(PathBuf, OsString)>> =
         paths.chunks(chunk_size).map(|c| c.to_vec()).collect();
-
-    // println!("Chunks: {}", chunks.len());
 
     let mut threads = Vec::new();
     for chunk in chunks {
@@ -61,22 +62,74 @@ fn main() {
         threads.push(handle);
     }
 
-    let mut counts_by_extension: HashMap<OsString, Counts> = HashMap::new();
+    let mut counts_by_extension: HashMap<OsString, ExtensionAggregate> = HashMap::new();
 
     for thread in threads {
         let result = thread.join().unwrap();
         for (count, extension) in result {
             counts_by_extension
                 .entry(extension)
-                .and_modify(|c| *c = c.add(&count))
-                .or_insert(count);
+                .and_modify(|c| {
+                    *c = c.add_count(&count);
+                })
+                .or_insert(ExtensionAggregate::from_count(count));
         }
     }
 
     let mut counts_vec = counts_by_extension.iter().collect::<Vec<_>>();
-    counts_vec.sort_by_key(|k| k.1.total());
 
-    for (extension, count) in counts_vec {
-        println!("Counts {extension:?}: {count:?}");
+    // sort by total line counts
+    counts_vec.sort_by_key(|k| k.1.count.total());
+
+    print_results(&counts_vec);
+}
+
+#[derive(Debug)]
+struct ExtensionAggregate {
+    count: Counts,
+    num_files: usize,
+}
+
+impl ExtensionAggregate {
+    fn from_count(count: Counts) -> ExtensionAggregate {
+        ExtensionAggregate {
+            count,
+            num_files: 1,
+        }
+    }
+    fn add_count(&mut self, count: &Counts) -> ExtensionAggregate {
+        ExtensionAggregate {
+            count: self.count.add(&count),
+            num_files: self.num_files + 1,
+        }
+    }
+}
+
+fn print_results(results: &Vec<(&OsString, &ExtensionAggregate)>) {
+    println!(
+        "{:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10}",
+        "", "Total", "Code", "Comments", "Empty", "Code %", "Comments %", "Empty %"
+    );
+
+    println!("{}", "-".repeat(100));
+
+    for (extension, aggregate) in results {
+        let count = &aggregate.count;
+        let total = count.total();
+        let percent_code = (count.code as f64) / (total as f64) * 100.0;
+        let percent_comments = (count.comments as f64) / (total as f64) * 100.0;
+        let percent_empty = (count.empty as f64) / (total as f64) * 100.0;
+
+        println!(
+            "{:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10.1} | {:<10.1} | {:<10.1}",
+            extension.to_str().unwrap(),
+            count.total(),
+            count.code,
+            count.comments,
+            count.empty,
+            percent_code,
+            percent_comments,
+            percent_empty
+        );
     }
 }

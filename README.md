@@ -49,6 +49,4 @@ TODOs
 - proper arg parsing funcionality with help pages (without using `clap` or similar)
 - better automatic directoy exclusion (e.g. `target` for Rust or `node_modules` for js)
 - install shell scripts
-- known list of extensions to include
-- CLI supplied excluded directories
 - add file counts

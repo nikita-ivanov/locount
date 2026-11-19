@@ -4,9 +4,9 @@ use crate::Language;
 
 #[derive(Debug)]
 pub struct Counts {
-    code: usize,
-    comments: usize,
-    empty: usize,
+    pub code: usize,
+    pub comments: usize,
+    pub empty: usize,
 }
 
 impl Counts {
