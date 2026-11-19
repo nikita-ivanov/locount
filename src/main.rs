@@ -107,11 +107,11 @@ impl ExtensionAggregate {
 
 fn print_results(results: &Vec<(&OsString, &ExtensionAggregate)>) {
     println!(
-        "{:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10}",
-        "", "Total", "Code", "Comments", "Empty", "Code %", "Comments %", "Empty %"
+        "{:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10}",
+        "", "Files", "Total", "Code", "Comments", "Empty", "Code %", "Comments %", "Empty %"
     );
 
-    println!("{}", "-".repeat(100));
+    println!("{}", "-".repeat(111));
 
     for (extension, aggregate) in results {
         let count = &aggregate.count;
@@ -121,8 +121,9 @@ fn print_results(results: &Vec<(&OsString, &ExtensionAggregate)>) {
         let percent_empty = (count.empty as f64) / (total as f64) * 100.0;
 
         println!(
-            "{:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10.1} | {:<10.1} | {:<10.1}",
+            "{:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10} | {:<10.1} | {:<10.1} | {:<10.1}",
             extension.to_str().unwrap(),
+            aggregate.num_files,
             count.total(),
             count.code,
             count.comments,
