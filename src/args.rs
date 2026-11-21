@@ -3,6 +3,9 @@ use std::{
     str::FromStr,
 };
 
+const HELP_STRING: &'static str =
+    "Usage: locount [path] [--mode | --count_mode] [--extension] [--exclude]";
+
 #[derive(Clone, Copy, Debug)]
 pub enum CountMode {
     FAST,
@@ -38,6 +41,7 @@ enum State {
     Start,
     Argument,
     Parameter,
+    Help,
 }
 
 // TODO: should display help string on panic
@@ -51,11 +55,19 @@ pub fn parse_args() -> Args {
             state = State::Parameter;
         }
 
+        if s == "--help" {
+            state = State::Help;
+        }
+
         match state {
             State::Start => {
                 // this is path of the binary, which we don't need
                 state = State::Argument;
                 continue;
+            }
+            State::Help => {
+                println!("{}", HELP_STRING);
+                std::process::exit(0);
             }
             State::Argument => {
                 builder.with_path(&s);
@@ -68,14 +80,20 @@ pub fn parse_args() -> Args {
                 println!("param {param_name}");
 
                 let Some(param_value) = iter.next() else {
-                    panic!("Missing param value for {param_name}");
+                    println!("Missing param value for {param_name}");
+                    println!("{}", HELP_STRING);
+                    std::process::exit(1);
                 };
 
                 match param_name {
                     "count_mode" | "mode" => builder.with_count_mode(&param_value),
                     "extension" => builder.with_extension(&param_value),
                     "exclude" => builder.with_exclude_dirs(&param_value),
-                    _ => panic!("Unknown parameter {param_name}"),
+                    _ => {
+                        println!("Unknown parameter {param_name}");
+                        println!("{}", HELP_STRING);
+                        std::process::exit(1);
+                    }
                 }
             }
         }
