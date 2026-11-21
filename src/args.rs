@@ -1,10 +1,15 @@
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
+#[derive(Clone, Copy, Debug)]
 pub enum CountMode {
     FAST,
     EXACT,
 }
 
+#[derive(Debug)]
 pub struct Args {
     pub path: PathBuf,
     pub count_mode: CountMode,
@@ -28,39 +33,117 @@ impl Args {
     }
 }
 
+#[derive(PartialEq, Eq)]
+enum State {
+    Start,
+    Argument,
+    Parameter,
+}
+
+// TODO: should display help string on panic
 pub fn parse_args() -> Args {
-    let path_string = std::env::args().nth(1).unwrap_or_else(|| ".".to_string());
-    let extension_string = std::env::args().nth(2);
-    let count_mode = std::env::args()
-        .nth(3)
-        .unwrap_or_else(|| "fast".to_string());
+    let mut state = State::Start;
+    let mut builder = ArgsBuilder::new();
 
-    let default_exclude = vec!["target".to_string(), "node_modules".to_string()];
+    let mut iter = std::env::args();
+    while let Some(s) = iter.next() {
+        if state != State::Start && s.starts_with("--") {
+            state = State::Parameter;
+        }
 
-    let exclude_dirs: Vec<String> = match std::env::args().nth(4) {
-        Some(dirs) => {
-            let mut dirs: Vec<String> = dirs.split(",").map(|s| s.trim().to_string()).collect();
-            for dir in default_exclude {
-                if !dirs.contains(&dir) {
-                    dirs.push(dir);
+        match state {
+            State::Start => {
+                // this is path of the binary, which we don't need
+                state = State::Argument;
+                continue;
+            }
+            State::Argument => {
+                builder.with_path(&s);
+            }
+            State::Parameter => {
+                let mut split = s.split("--");
+                split.next().unwrap();
+
+                let param_name = split.next().unwrap();
+                println!("param {param_name}");
+
+                let Some(param_value) = iter.next() else {
+                    panic!("Missing param value for {param_name}");
+                };
+
+                match param_name {
+                    "count_mode" | "mode" => builder.with_count_mode(&param_value),
+                    "extension" => builder.with_extension(&param_value),
+                    "exclude" => builder.with_exclude_dirs(&param_value),
+                    _ => panic!("Unknown parameter {param_name}"),
                 }
             }
-            // dirs.extend(default_exclude);
-            dirs
         }
-        None => default_exclude,
-    };
+    }
 
-    let count_mode = match &count_mode[..] {
-        "fast" => CountMode::FAST,
-        "exact" => CountMode::EXACT,
-        _ => panic!("unknown count mode, available values: fast, exact"),
-    };
+    builder.build()
+}
 
-    let path = match path_string == ".".to_string() {
-        true => std::env::current_dir().unwrap(),
-        false => PathBuf::from(path_string),
-    };
+struct ArgsBuilder {
+    path: Option<PathBuf>,
+    count_mode: Option<CountMode>,
+    extension: Option<String>,
+    exclude_dir: Option<Vec<String>>,
+}
 
-    Args::new(&path, count_mode, extension_string, exclude_dirs)
+impl ArgsBuilder {
+    pub fn new() -> ArgsBuilder {
+        ArgsBuilder {
+            path: None,
+            count_mode: None,
+            extension: None,
+            exclude_dir: None,
+        }
+    }
+    pub fn with_path(&mut self, path: &str) {
+        self.path = Some(PathBuf::from_str(path).unwrap());
+    }
+
+    pub fn with_count_mode(&mut self, count_mode: &str) {
+        match count_mode {
+            "fast" => {
+                self.count_mode = Some(CountMode::FAST);
+            }
+            "exact" => {
+                self.count_mode = Some(CountMode::EXACT);
+            }
+            _ => {
+                println!("Unknown count mode supplied: {count_mode}. Will skip.")
+            }
+        }
+    }
+
+    pub fn with_extension(&mut self, extension: &str) {
+        self.extension = Some(extension.to_string());
+    }
+
+    pub fn with_exclude_dirs(&mut self, dirs: &str) {
+        self.exclude_dir = Some(dirs.split(",").map(|s| s.to_string()).collect());
+    }
+
+    pub fn build(&self) -> Args {
+        let path = self
+            .path
+            .clone()
+            .unwrap_or_else(|| std::env::current_dir().unwrap());
+
+        let count_mode = self.count_mode.unwrap_or_else(|| CountMode::FAST);
+
+        let extension = self.extension.clone();
+
+        let mut exclude_dirs = self.exclude_dir.clone().unwrap_or_else(|| Vec::new());
+        exclude_dirs.extend(vec!["target".to_string(), "node_modules".to_string()]);
+
+        Args {
+            path,
+            count_mode,
+            extension,
+            exclude_dirs,
+        }
+    }
 }

@@ -10,7 +10,7 @@ cargo build -r
 ```
 then run
 ```bash
-target/release/locount [path/to/file] [extension] [mode] [exclude]
+target/release/locount [path/to/file] [--mode] [--extension] [--exclude]
 ```
 
 `mode` is either `fast` (default) or `exact`. Fast mode may avoids per-character scans but may treat
