@@ -6,22 +6,16 @@ use std::{
 
 use crate::language::languages;
 
-fn path_to_file_name<'a>(path: &'a Path) -> Option<&'a str> {
-    let Some(file_name) = path.file_name() else {
-        return None;
-    };
-
-    let Some(file_name_str) = file_name.to_str() else {
-        return None;
-    };
-
+fn path_to_file_name(path: &Path) -> Option<&str> {
+    let file_name = path.file_name()?;
+    let file_name_str = file_name.to_str()?;
     Some(file_name_str)
 }
 
 pub fn list_files(
     path: &Path,
     extension: Option<&str>,
-    exclude_dirs: &Vec<String>,
+    exclude_dirs: &[String],
 ) -> Vec<(PathBuf, OsString)> {
     if path.is_file() {
         let Some(ext) = path.extension() else {
@@ -88,7 +82,7 @@ pub fn list_files(
                     continue;
                 };
 
-                if dir_name.starts_with(".") || exclude_dirs.iter().any(|d| d == &dir_name) {
+                if dir_name.starts_with(".") || exclude_dirs.iter().any(|d| d == dir_name) {
                     continue;
                 }
 

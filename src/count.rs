@@ -95,7 +95,7 @@ fn scan_line_exact(
                 if let Some(block) = block_comment {
                     if rest.starts_with(block.0) {
                         state = State::CommentBlock;
-                        i = i + block.0.len();
+                        i += block.0.len();
                     } else {
                         saw_code = true;
                         i += char_length;
@@ -163,9 +163,9 @@ fn scan_line_fast(
                     return (State::CommentBlock, Counts::new(1, 0, 0));
                 }
 
-                return (State::Code, Counts::new(1, 0, 0));
+                (State::Code, Counts::new(1, 0, 0))
             } else {
-                return (State::Code, Counts::new(1, 0, 0));
+                (State::Code, Counts::new(1, 0, 0))
             }
         }
         State::CommentBlock => {
@@ -173,9 +173,9 @@ fn scan_line_fast(
                 block_comment.expect("We must have block_comment if we are in comment block");
 
             if line_trimmed.contains(block.1) {
-                return (State::Code, Counts::new(0, 1, 0));
+                (State::Code, Counts::new(0, 1, 0))
             } else {
-                return (State::CommentBlock, Counts::new(0, 1, 0));
+                (State::CommentBlock, Counts::new(0, 1, 0))
             }
         }
     }
@@ -185,7 +185,7 @@ pub fn count_lines_fast(contents: &str, lang: &Language) -> Counts {
     let mut state = State::Code;
     let mut counts = Counts::empty();
 
-    for line in str::lines(&contents) {
+    for line in str::lines(contents) {
         let (s, c) = scan_line_fast(&state, line, lang.comments, lang.block_comments);
         state = s;
         counts = counts + c;
@@ -198,7 +198,7 @@ pub fn count_lines_exact(contents: &str, lang: &Language) -> Counts {
     let mut state = State::Code;
     let mut counts = Counts::empty();
 
-    for line in str::lines(&contents) {
+    for line in str::lines(contents) {
         let (s, c) = scan_line_exact(&state, line, lang.comments, lang.block_comments);
         state = s;
         counts = counts + c;

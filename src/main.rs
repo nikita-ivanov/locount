@@ -53,7 +53,7 @@ fn main() {
                     continue;
                 };
 
-                let c = count_lines(&contents, &lang);
+                let c = count_lines(&contents, lang);
                 counts.push((c, extension));
             }
             counts
@@ -99,7 +99,7 @@ impl ExtensionAggregate {
     }
     fn add_count(&mut self, count: &Counts) -> ExtensionAggregate {
         ExtensionAggregate {
-            count: self.count.add(&count),
+            count: self.count.add(count),
             num_files: self.num_files + 1,
         }
     }
