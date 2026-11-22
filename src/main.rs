@@ -9,11 +9,11 @@ use std::fs;
 use std::{path::PathBuf, thread};
 
 fn main() {
-    let args = parse_args(&mut std::env::args());
+    let args = parse_args(std::env::args().skip(1));
 
     let count_lines: fn(&str, &Language) -> Counts = match args.count_mode {
-        CountMode::FAST => count_lines_fast,
-        CountMode::EXACT => count_lines_exact,
+        CountMode::Fast => count_lines_fast,
+        CountMode::Exact => count_lines_exact,
     };
 
     let paths = list_files(&args.path, args.extension.as_deref(), &args.exclude_dirs);

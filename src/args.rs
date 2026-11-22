@@ -1,11 +1,11 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 const HELP_STRING: &str = "Usage: locount [--mode | -m] [--extension] [--exclude] [path] ";
 
 #[derive(Clone, Copy, Debug)]
 pub enum CountMode {
-    FAST,
-    EXACT,
+    Fast,
+    Exact,
 }
 
 #[derive(Debug)]
@@ -16,22 +16,6 @@ pub struct Args {
     pub exclude_dirs: Vec<String>,
 }
 
-impl Args {
-    pub fn new(
-        path: &Path,
-        count_mode: CountMode,
-        extension: Option<String>,
-        exclude_dirs: Vec<String>,
-    ) -> Args {
-        Args {
-            path: path.to_path_buf(),
-            extension,
-            count_mode,
-            exclude_dirs,
-        }
-    }
-}
-
 #[derive(PartialEq, Eq)]
 enum State {
     Start,
@@ -40,11 +24,8 @@ enum State {
     ExpectingExcludeDirs,
 }
 
-pub fn parse_args(args: &mut std::env::Args) -> Args {
+pub fn parse_args(args: impl Iterator<Item = String>) -> Args {
     let mut state = State::Start;
-
-    // skip the first argument which is the path of the binary
-    let _ = args.next();
 
     let mut path: Option<PathBuf> = None;
     let mut mode: Option<CountMode> = None;
@@ -80,10 +61,10 @@ pub fn parse_args(args: &mut std::env::Args) -> Args {
             State::ExpectingMode => {
                 match arg.as_str() {
                     "fast" => {
-                        mode = Some(CountMode::FAST);
+                        mode = Some(CountMode::Fast);
                     }
                     "exact" => {
-                        mode = Some(CountMode::EXACT);
+                        mode = Some(CountMode::Exact);
                     }
                     _ => {
                         eprintln!("Unknown --mode argument: {arg}. Supported values: fast, exact.");
@@ -120,7 +101,7 @@ pub fn parse_args(args: &mut std::env::Args) -> Args {
 
     Args {
         path: path.unwrap_or_else(|| std::env::current_dir().unwrap()),
-        count_mode: mode.unwrap_or(CountMode::FAST),
+        count_mode: mode.unwrap_or(CountMode::Fast),
         extension,
         exclude_dirs,
     }

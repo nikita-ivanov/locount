@@ -20,7 +20,7 @@ impl Language {
 
 pub fn languages() -> HashMap<&'static str, Language> {
     HashMap::from_iter([
-        ("rs", Language::new(&["//"], None)),
+        ("rs", Language::new(&["//"], Some(("/*", "*/")))),
         ("py", Language::new(&["#"], None)),
         ("js", Language::new(&["//"], Some(("/*", "*/")))),
         ("ts", Language::new(&["//"], Some(("/*", "*/")))),
