@@ -22,7 +22,7 @@ comment under `fast` mode vs. as code under `exact` mode. Exact mode is roughly 
 ## Benchmarking
 Running `locount` vs `tokei` against Zed codebase:
 ```text
-time target/release/locount --extension rs /Users/nivanov/code/rust/zed
+time target/release/locount --extension rs ~/nivanov/code/rust/zed
 Files: 2051
            | Files      | Total      | Code       | Comments   | Empty      | Code %     | Comments % | Empty %
 ---------------------------------------------------------------------------------------------------------------
@@ -31,7 +31,7 @@ target/release/locount --extension rs /Users/nivanov/code/rust/zed  0.12s user 0
 ```
 
 ```
-time tokei -t=Rust path/to/zed
+time tokei -t=Rust ~/nivanov/code/rust/zed
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Language              Files        Lines         Code     Comments       Blanks
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
