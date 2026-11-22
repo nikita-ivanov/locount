@@ -102,10 +102,13 @@ pub fn parse_args(args: &mut std::env::Args) -> Args {
             }
         }
     }
+    let mut exclude_dirs = exclude_dirs.unwrap_or_else(|| Vec::new());
+    exclude_dirs.extend(["target".to_string(), "node_modules".to_string()]);
+
     Args {
         path: path.unwrap_or_else(|| std::env::current_dir().unwrap()),
         count_mode: mode.unwrap_or_else(|| CountMode::FAST),
         extension: extension,
-        exclude_dirs: exclude_dirs.unwrap_or_else(|| Vec::new()),
+        exclude_dirs: exclude_dirs,
     }
 }

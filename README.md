@@ -22,12 +22,12 @@ comment under `fast` mode vs. as code under `exact` mode. Exact mode is roughly 
 ## Benchmarking
 Running `locount` vs `tokei` against Zed codebase:
 ```text
-time target/release/locount /Users/nivanov/code/rust/zed rs fast
-Files: 1935
-Chunks: 9
-Counts: Counts { code: 1386997, comments: 71872, empty: 152579 }
-Total lines of code: 1611448
-0.11s user 0.10s system 318% cpu 0.066 total
+time target/release/locount --extension rs /Users/nivanov/code/rust/zed
+Files: 2051
+           | Files      | Total      | Code       | Comments   | Empty      | Code %     | Comments % | Empty %
+---------------------------------------------------------------------------------------------------------------
+rs         | 2051       | 1842144    | 1597733    | 78596      | 165815     | 86.7       | 4.3        | 9.0
+target/release/locount --extension rs /Users/nivanov/code/rust/zed  0.12s user 0.11s system 326% cpu 0.072 total
 ```
 
 ```
