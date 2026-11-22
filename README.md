@@ -27,7 +27,7 @@ Files: 2051
            | Files      | Total      | Code       | Comments   | Empty      | Code %     | Comments % | Empty %
 ---------------------------------------------------------------------------------------------------------------
 rs         | 2051       | 1842144    | 1597733    | 78596      | 165815     | 86.7       | 4.3        | 9.0
-target/release/locount --extension rs /Users/nivanov/code/rust/zed  0.12s user 0.11s system 326% cpu 0.072 total
+0.12s user 0.11s system 326% cpu 0.072 total
 ```
 
 ```
