@@ -9,7 +9,7 @@ use std::fs;
 use std::{path::PathBuf, thread};
 
 fn main() {
-    let args = parse_args();
+    let args = parse_args(&mut std::env::args());
 
     let count_lines: fn(&str, &Language) -> Counts = match args.count_mode {
         CountMode::FAST => count_lines_fast,

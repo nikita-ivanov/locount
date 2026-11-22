@@ -1,10 +1,6 @@
-use std::{
-    path::{Path, PathBuf},
-    str::FromStr,
-};
+use std::path::{Path, PathBuf};
 
-const HELP_STRING: &'static str =
-    "Usage: locount [path] [--mode | --count_mode] [--extension] [--exclude]";
+const HELP_STRING: &'static str = "Usage: locount [--mode | -m] [--extension] [--exclude] [path] ";
 
 #[derive(Clone, Copy, Debug)]
 pub enum CountMode {
@@ -39,129 +35,77 @@ impl Args {
 #[derive(PartialEq, Eq)]
 enum State {
     Start,
-    Argument,
-    Parameter,
-    Help,
+    ExpectingMode,
+    ExpectingExtension,
+    ExpectingExcludeDirs,
 }
 
-// TODO: should display help string on panic
-pub fn parse_args() -> Args {
+pub fn parse_args(args: &mut std::env::Args) -> Args {
     let mut state = State::Start;
-    let mut builder = ArgsBuilder::new();
 
-    let mut iter = std::env::args();
-    while let Some(s) = iter.next() {
-        if state != State::Start && s.starts_with("--") {
-            state = State::Parameter;
-        }
+    // skip the first argument which is the path of the binary
+    let _ = args.next();
 
-        if s == "--help" {
-            state = State::Help;
-        }
+    let mut path: Option<PathBuf> = None;
+    let mut mode: Option<CountMode> = None;
+    let mut extension: Option<String> = None;
+    let mut exclude_dirs: Option<Vec<String>> = None;
 
+    while let Some(s) = args.next() {
         match state {
-            State::Start => {
-                // this is path of the binary, which we don't need
-                state = State::Argument;
-                continue;
-            }
-            State::Help => {
-                println!("{}", HELP_STRING);
-                std::process::exit(0);
-            }
-            State::Argument => {
-                builder.with_path(&s);
-            }
-            State::Parameter => {
-                let mut split = s.split("--");
-                split.next().unwrap();
-
-                let param_name = split.next().unwrap();
-                println!("param {param_name}");
-
-                let Some(param_value) = iter.next() else {
-                    println!("Missing param value for {param_name}");
+            State::Start => match s.as_str() {
+                "--help" => {
                     println!("{}", HELP_STRING);
-                    std::process::exit(1);
-                };
+                    std::process::exit(0);
+                }
+                "--mode" | "-m" => {
+                    state = State::ExpectingMode;
+                }
+                "--extension" => {
+                    state = State::ExpectingExtension;
+                }
+                "--exclude" => {
+                    state = State::ExpectingExcludeDirs;
+                }
+                _ => {
+                    if s.starts_with("-") {
+                        eprintln!("Invalid positional argument: {s}");
+                        eprintln!("{}", HELP_STRING);
+                        std::process::exit(1);
+                    }
 
-                match param_name {
-                    "count_mode" | "mode" => builder.with_count_mode(&param_value),
-                    "extension" => builder.with_extension(&param_value),
-                    "exclude" => builder.with_exclude_dirs(&param_value),
+                    path = Some(PathBuf::from(&s));
+                }
+            },
+            State::ExpectingMode => {
+                match s.as_str() {
+                    "fast" => {
+                        mode = Some(CountMode::FAST);
+                    }
+                    "exact" => {
+                        mode = Some(CountMode::EXACT);
+                    }
                     _ => {
-                        println!("Unknown parameter {param_name}");
-                        println!("{}", HELP_STRING);
+                        eprintln!("Unknown --mode argument: {s}. Supported values: fast, exact.");
                         std::process::exit(1);
                     }
                 }
+                state = State::Start;
+            }
+            State::ExpectingExtension => {
+                extension = Some(s.to_string());
+                state = State::Start;
+            }
+            State::ExpectingExcludeDirs => {
+                exclude_dirs = Some(s.split(",").map(|s| s.to_string()).collect());
+                state = State::Start;
             }
         }
     }
-
-    builder.build()
-}
-
-struct ArgsBuilder {
-    path: Option<PathBuf>,
-    count_mode: Option<CountMode>,
-    extension: Option<String>,
-    exclude_dir: Option<Vec<String>>,
-}
-
-impl ArgsBuilder {
-    pub fn new() -> ArgsBuilder {
-        ArgsBuilder {
-            path: None,
-            count_mode: None,
-            extension: None,
-            exclude_dir: None,
-        }
-    }
-    pub fn with_path(&mut self, path: &str) {
-        self.path = Some(PathBuf::from_str(path).unwrap());
-    }
-
-    pub fn with_count_mode(&mut self, count_mode: &str) {
-        match count_mode {
-            "fast" => {
-                self.count_mode = Some(CountMode::FAST);
-            }
-            "exact" => {
-                self.count_mode = Some(CountMode::EXACT);
-            }
-            _ => {
-                println!("Unknown count mode supplied: {count_mode}. Will skip.")
-            }
-        }
-    }
-
-    pub fn with_extension(&mut self, extension: &str) {
-        self.extension = Some(extension.to_string());
-    }
-
-    pub fn with_exclude_dirs(&mut self, dirs: &str) {
-        self.exclude_dir = Some(dirs.split(",").map(|s| s.to_string()).collect());
-    }
-
-    pub fn build(&self) -> Args {
-        let path = self
-            .path
-            .clone()
-            .unwrap_or_else(|| std::env::current_dir().unwrap());
-
-        let count_mode = self.count_mode.unwrap_or_else(|| CountMode::FAST);
-
-        let extension = self.extension.clone();
-
-        let mut exclude_dirs = self.exclude_dir.clone().unwrap_or_else(|| Vec::new());
-        exclude_dirs.extend(vec!["target".to_string(), "node_modules".to_string()]);
-
-        Args {
-            path,
-            count_mode,
-            extension,
-            exclude_dirs,
-        }
+    Args {
+        path: path.unwrap_or_else(|| std::env::current_dir().unwrap()),
+        count_mode: mode.unwrap_or_else(|| CountMode::FAST),
+        extension: extension,
+        exclude_dirs: exclude_dirs.unwrap_or_else(|| Vec::new()),
     }
 }
