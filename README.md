@@ -20,7 +20,7 @@ comment under `fast` mode vs. as code under `exact` mode. Exact mode is roughly 
 `[exclude]` is an optional list of comma separated directories for exclusion (no whitespaces).
 
 ## Benchmarking
-Running `locount` vs `tokei` against Zed codebase:
+Running `locount` vs `tokei` against Servo codebase:
 ```text
 time target/release/locount ~/code/rust/servo --extension rs
 Files: 1750
