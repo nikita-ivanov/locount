@@ -22,26 +22,23 @@ comment under `fast` mode vs. as code under `exact` mode. Exact mode is roughly 
 ## Benchmarking
 Running `locount` vs `tokei` against Zed codebase:
 ```text
-time target/release/locount --extension rs ~/code/rust/zed
-Files: 2051
+time target/release/locount ~/code/rust/servo --extension rs
+Files: 1750
            | Files      | Total      | Code       | Comments   | Empty      | Code %     | Comments % | Empty %
 ---------------------------------------------------------------------------------------------------------------
-rs         | 2051       | 1842144    | 1597733    | 78596      | 165815     | 86.7       | 4.3        | 9.0
-0.12s user 0.11s system 326% cpu 0.072 total
+rs         | 1750       | 586123     | 446568     | 79793      | 59762      | 76.2       | 13.6       | 10.2
+
+0.09s user 0.31s system 127% cpu 0.316 total
 ```
 
 ```
-time tokei -t=Rust ~/code/rust/zed
+time tokei ~/code/rust/servo --compact --num-format commas --rsort lines --types=Rust
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  Language              Files        Lines         Code     Comments       Blanks
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- Rust                   1943      1572772      1392083        32122       148567
- |- Markdown            1166        38698          234        34115         4349
- (Total)                          1611470      1392317        66237       152916
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- Total                  1943      1611470      1392317        66237       152916
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-0.39s user 0.17s system 465% cpu 0.120 total
+ Rust                  1,750      555,696      447,131       49,247       59,318
+
+0.56s user 1.23s system 212% cpu 0.841 total
 ```
 
 TODOs
